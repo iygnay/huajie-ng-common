@@ -1,3 +1,9 @@
+# 3.0.1 (2017-06-04)
+
+## bug fixes
+
+1. 修复`tsconfig.es5.json`中`flatModuleId`设置错误导致`AoT`模式下不能正确编译的问题 
+
 # 3.0.0 (2017-06-02)
 
 ## breaking changes
