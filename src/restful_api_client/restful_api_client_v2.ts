@@ -34,7 +34,7 @@ export class RESTfulApiClientV2 {
         let p1 = this._http.get(url, { 
             withCredentials: true,
             headers: headers,
-            params: options.params, 
+            params: this.parseParams(options.params), 
             // responseType: ResponseContentType.Json,
         })
             .toPromise()
@@ -65,7 +65,7 @@ export class RESTfulApiClientV2 {
         let p1 = this._http.post(url, JSON.stringify(body), {
             withCredentials: true,
             headers: headers,
-            params: options.params, 
+            params: this.parseParams(options.params), 
             // responseType: ResponseContentType.Json,
         })
             .toPromise()
@@ -82,6 +82,28 @@ export class RESTfulApiClientV2 {
                 rejectFn(`网络超时(${ms})`);
             }, ms);
         });
+    }
+
+    private parseParams(params: string | URLSearchParams | { [key: string]: any | any[] }) {
+        if (!params)
+            return params;
+
+        if (typeof(params) === 'string')
+            return params;
+
+        if (params instanceof URLSearchParams)
+            return params;
+
+        for(let key of Object.keys(params)) {
+            // 如果是Date类型, 就转换为string
+            let val = params[key];
+            if (typeof val.getFullYear === 'function' && 
+                typeof val.toISOString === 'function') {
+                params[key] = val.toISOString();
+            }
+        }
+
+        return params;
     }
 
     private createHeaders(options: RequestOptions, headers?: {[name: string]: any;}) {

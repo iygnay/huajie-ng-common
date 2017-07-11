@@ -1,3 +1,9 @@
+# 3.0.3 (2017-07-11)
+
+## bug fixes
+
+1. 修复`RESTfulApiClientV2`对`Date`类型的请求参数处理不正确的错误.
+
 # 3.0.1 (2017-06-04)
 
 ## bug fixes
