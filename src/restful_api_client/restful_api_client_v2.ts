@@ -97,7 +97,7 @@ export class RESTfulApiClientV2 {
         for(let key of Object.keys(params)) {
             // 如果是Date类型, 就转换为string
             let val = params[key];
-            if (typeof val.getFullYear === 'function' && 
+            if (val != null && typeof val.getFullYear === 'function' && 
                 typeof val.toISOString === 'function') {
                 params[key] = val.toISOString();
             }
