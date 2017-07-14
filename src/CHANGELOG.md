@@ -1,3 +1,9 @@
+# 3.0.5 (2017-07-14)
+
+## bug fixes
+
+1. 修复`RESTfulApiClientV2`会修改传入的`params`的值的错误.
+
 # 3.0.4 (2017-07-12)
 
 ## bug fixes

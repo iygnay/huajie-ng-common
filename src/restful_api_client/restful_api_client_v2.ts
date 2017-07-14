@@ -94,16 +94,20 @@ export class RESTfulApiClientV2 {
         if (params instanceof URLSearchParams)
             return params;
 
-        for(let key of Object.keys(params)) {
+        const result = {
+            ... params
+        };
+
+        for(let key of Object.keys(result)) {
             // 如果是Date类型, 就转换为string
-            let val = params[key];
+            let val = result[key];
             if (val != null && typeof val.getFullYear === 'function' && 
                 typeof val.toISOString === 'function') {
-                params[key] = val.toISOString();
+                result[key] = val.toISOString();
             }
         }
 
-        return params;
+        return result;
     }
 
     private createHeaders(options: RequestOptions, headers?: {[name: string]: any;}) {
