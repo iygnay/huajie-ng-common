@@ -67,6 +67,7 @@
     "node": ">=6.0.0"
   },
   "dependencies": {
-    "@angular/http": "^4.1.3"
+    "@angular/http": "^4.1.3",
+    "@huajie-ng/storage": "^0.1.0"
   }
 }

@@ -1,28 +1,33 @@
 import { Injectable, Inject, Optional } from '@angular/core';
 import { AuthTicket } from './auth_ticket';
 import { AUTH_TICKET_MANAGER_STORAGE_PROVIDER } from './auth_ticket_manager_storage_provider';
+import { JsonStorage, JsonStorageWrapper } from '@huajie-ng/storage';
 
 const LOCAL_STORAGE_KEY = '.AuthTicketManager._ticketsV2';
 const DEFAULT_NAME = '___$default';
 
+interface LocalTickets {
+    [name: string]: AuthTicket
+}
+
 @Injectable()
 export class AuthTicketManager {
-    private _tickets: {
-        [name: string]: AuthTicket
-    };
 
-    _storage: any;
-
+    _storage: JsonStorage;
+    private _tickets: LocalTickets;
+    
     constructor(
         @Inject(AUTH_TICKET_MANAGER_STORAGE_PROVIDER) @Optional() private _storageProvider: string,
     ) { 
-        this._storage = _storageProvider == 'session' 
-            ? sessionStorage : localStorage;
+        this._storage = new JsonStorageWrapper(_storageProvider == 'session' 
+            ? sessionStorage : localStorage);
 
-        console.info('AuthTicketManager', _storageProvider || 'local');
         // 从本地存储加载以前的凭证
-        let json = this._storage[LOCAL_STORAGE_KEY] || '{}';
-        this._tickets = JSON.parse(json);
+        this._checkout();
+    }
+
+    private _checkout() {
+        this._tickets = this._storage.getItem<LocalTickets>(LOCAL_STORAGE_KEY) || {};
 
         for (let n in this._tickets) {
             let t = this._tickets[n];
@@ -31,10 +36,14 @@ export class AuthTicketManager {
             }
         }
     }
+    
+    private _save() {
+        this._storage.setItem(LOCAL_STORAGE_KEY, this._tickets);
+    }
 
     set(ticket: AuthTicket, name?: string) {
         this._tickets[name || DEFAULT_NAME] = ticket;
-        this._storage[LOCAL_STORAGE_KEY] = JSON.stringify(this._tickets);
+        this._save();
     }
 
     get(name?: string) {
@@ -43,6 +52,6 @@ export class AuthTicketManager {
 
     remove(name?: string) {
         this.set(undefined, name || DEFAULT_NAME);
-        this._storage[LOCAL_STORAGE_KEY] = JSON.stringify(this._tickets);
+        this._save();
     }
 }

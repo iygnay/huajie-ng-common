@@ -1,4 +1,4 @@
-import { Injectable, OpaqueToken, Inject, Optional } from '@angular/core';
+import { Injectable, InjectionToken, Inject, Optional } from '@angular/core';
 import { Http, Response, URLSearchParams, Headers, RequestOptionsArgs, ResponseContentType } from '@angular/http';
 import 'rxjs/add/operator/toPromise';
 import { RequestOptions, GLOBAL_REQUEST_OPTIONS } from './request_options';

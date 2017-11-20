@@ -1,11 +1,11 @@
-import { OpaqueToken } from '@angular/core';
+import { InjectionToken } from '@angular/core';
 import { URLSearchParams } from '@angular/http';
 import { AuthorizationArgs } from './authorization_args';
 
 /**
  * 全局的参数配置.
  */
-export const GLOBAL_REQUEST_OPTIONS = new OpaqueToken('GLOBAL_REQUEST_OPTIONS');
+export const GLOBAL_REQUEST_OPTIONS = new InjectionToken('GLOBAL_REQUEST_OPTIONS');
 
 /**
  * RESTfulApiClientRequestOptions.

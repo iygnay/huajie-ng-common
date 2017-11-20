@@ -1,3 +1,9 @@
+# 3.1.0 (2017-07-14)
+
+## 功能调整
+
+1. 将`OpaqueToken`替换为`InjectionToken`, 以配合`angular 5`更新
+
 # 3.0.5 (2017-07-14)
 
 ## bug fixes
