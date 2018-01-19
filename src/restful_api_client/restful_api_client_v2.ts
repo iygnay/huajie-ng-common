@@ -94,24 +94,37 @@ export class RESTfulApiClientV2 {
         if (params instanceof URLSearchParams)
             return params;
 
-        const result: any = {};
+        const result = new URLSearchParams();
 
         for (const key of Object.keys(params)) {
             let val = params[key];
 
-            if (val === null || val === undefined || val === '') 
-                continue;
-
-            if (typeof (val['toISOString']) === 'function')
-                val = val.toISOString();
-            else {
-                val = val.toString();
+            if (key != null && Array.isArray(key)) {
+                for (const item of val) {
+                    let s = this._getValStr(item);
+                    if (s != null) {
+                        result.append(key, s);
+                    }
+                }
+            } else {
+                let s = this._getValStr(val);
+                if (s != null) {
+                    result.append(key, s);
+                }
             }
-            
-            result[key] = val;
         }
 
         return result;
+    }
+
+    private _getValStr(val: any) {
+        if (val === null || val === undefined) 
+            return null;
+        
+        if (typeof (val['toISOString']) === 'function') {
+            return val.toISOString();
+        }
+        return val.toString();
     }
 
     private createHeaders(options: RequestOptions, headers?: {[name: string]: any;}) {

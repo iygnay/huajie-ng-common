@@ -2,9 +2,9 @@ import { Injectable, Inject, Optional } from '@angular/core';
 import { AuthTicket } from './auth_ticket';
 import { AUTH_TICKET_MANAGER_STORAGE_PROVIDER } from './auth_ticket_manager_storage_provider';
 import { JsonStorage, JsonStorageWrapper } from '@huajie-ng/storage';
+import { AUTH_TICKET_DEFAULT_NAME } from './auth_ticket_default_name';
 
 const LOCAL_STORAGE_KEY = '.AuthTicketManager._ticketsV2';
-const DEFAULT_NAME = '___$default';
 
 interface LocalTickets {
     [name: string]: AuthTicket
@@ -18,7 +18,12 @@ export class AuthTicketManager {
     
     constructor(
         @Inject(AUTH_TICKET_MANAGER_STORAGE_PROVIDER) @Optional() private _storageProvider: string,
+        @Inject(AUTH_TICKET_DEFAULT_NAME) private _defaultName: string,
     ) { 
+        if (!this._defaultName) {
+            throw new Error('AuthTicketManager: !AUTH_TICKET_DEFAULT_NAME');
+        }
+
         this._storage = new JsonStorageWrapper(_storageProvider == 'session' 
             ? sessionStorage : localStorage);
 
@@ -42,16 +47,16 @@ export class AuthTicketManager {
     }
 
     set(ticket: AuthTicket, name?: string) {
-        this._tickets[name || DEFAULT_NAME] = ticket;
+        this._tickets[name || this._defaultName] = ticket;
         this._save();
     }
 
     get(name?: string) {
-        return this._tickets[name || DEFAULT_NAME];
+        return this._tickets[name || this._defaultName];
     }
 
     remove(name?: string) {
-        this.set(undefined, name || DEFAULT_NAME);
+        this.set(undefined, name || this._defaultName);
         this._save();
     }
 }
