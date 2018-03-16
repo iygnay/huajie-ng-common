@@ -71,8 +71,11 @@ export class RESTfulApiClientV2 {
             headers: headers,
             params: parseURLSearchParams(options.params),
             body: JSON.stringify(body),
-            responseType: ResponseContentType.Json,
             method: method,
+            // note(杨逸):
+            //  这里不能设置responseType, 因为设置之后, 即使相应内部不是合法的JSON格式, 也会被些解析为null(而不是抛出异常),
+            //  我们希望能够抛出异常, 这样方便调试错误.
+            // responseType: ResponseContentType.Json,
         });
 
         try {
