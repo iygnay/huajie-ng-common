@@ -1,6 +1,6 @@
 {
     "name": "@huajie-ng/common",
-    "version": "3.2.0",
+    "version": "4.0.0",
     "repository": {
         "type": "git",
         "url": "https://github.com/username/repo"
@@ -19,8 +19,8 @@
     "module": "common.js",
     "typings": "common.d.ts",
     "peerDependencies": {
-        "@angular/core": "^4.0.0",
-        "@angular/http": "^4.0.0",
+        "@angular/core": "^5.0.0",
+        "@angular/http": "^5.0.0",
         "@huajie-ng/storage": "^0.1.0",
         "rxjs": "^5.1.0",
         "zone.js": "^0.8.4"

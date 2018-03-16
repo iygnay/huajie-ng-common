@@ -1,7 +1,9 @@
 import { Injectable, InjectionToken, Inject, Optional } from '@angular/core';
-import { Http, Response, URLSearchParams, Headers, RequestOptionsArgs, ResponseContentType } from '@angular/http';
+import { Http, Response, URLSearchParams, Headers, RequestOptionsArgs, ResponseContentType, Request } from '@angular/http';
 import 'rxjs/add/operator/toPromise';
 import { RequestOptions, GLOBAL_REQUEST_OPTIONS } from './request_options';
+import { HttpError, HttpBadJsonFormatError, HttpNotSuccessStatusCodeError, HttpNetworkError } from './http-error';
+import { parseURLSearchParams } from './parse-url-search-params';
 
 /**
  * RESTfulApiClientV2:
@@ -28,21 +30,7 @@ export class RESTfulApiClientV2 {
      * @memberOf RESTfulApiClientV2
      */
     get<T>(url: string, options?: RequestOptions) {
-        options = Object.assign({}, this._globalOptions, options);
-        let headers = this.createHeaders(options);
-
-        let p1 = this._http.get(url, { 
-            withCredentials: true,
-            headers: headers,
-            params: this.parseParams(options.params), 
-            // responseType: ResponseContentType.Json,
-        })
-            .toPromise()
-            .then(rsp => this.parseResp<T>(rsp))
-            .catch(rsp => Promise.reject(this.parseResp<any>(rsp)));
-
-        return !options.timeout ? p1 
-            : Promise.race([p1, this.throwAfterTime<T>(options.timeout)]);
+        return this._exec<T>(url, null, 'GEt', options);
     }
 
     /**
@@ -57,92 +45,86 @@ export class RESTfulApiClientV2 {
      * @memberOf RESTfulApiClientV2
      */
     post<T>(url: string, body: any, options?: RequestOptions) {
-        options = Object.assign({}, this._globalOptions, options);
-        let headers = this.createHeaders(options, {
-            'Content-Type': 'application/json'
-        });
+        return this._exec<T>(url, body, 'POST', options);
+    }
 
-        let p1 = this._http.post(url, JSON.stringify(body), {
+    /**
+     * 执行请求.
+     * 
+     * @param url 
+     * @param body 
+     * @param method 
+     * @param options 
+     */
+    private async _exec<T>(url: string, body: any, method: string, options?: RequestOptions) {
+        options = Object.assign({}, this._globalOptions, options);
+
+        let headers = new Headers();
+        headers.set('Content-Type', 'application/json');
+        if (options.authorization && options.authorization.scheme && options.authorization.parameter) {
+            headers.set('Authorization', options.authorization.scheme + ' ' + options.authorization.parameter);
+        }
+
+        let request = new Request({
+            url: url,
             withCredentials: true,
             headers: headers,
-            params: this.parseParams(options.params), 
-            // responseType: ResponseContentType.Json,
-        })
-            .toPromise()
-            .then(rsp => this.parseResp<T>(rsp))
-            .catch(rsp => Promise.reject(this.parseResp<any>(rsp)));
-
-        return !options.timeout ? p1 
-            : Promise.race([p1, this.throwAfterTime<T>(options.timeout)]);
-    }
-
-    private throwAfterTime<T>(ms: number) {
-        return new Promise<T>((resolveFn, rejectFn) => {
-            setTimeout(() => {
-                rejectFn(`网络超时(${ms})`);
-            }, ms);
+            params: parseURLSearchParams(options.params),
+            body: JSON.stringify(body),
+            responseType: ResponseContentType.Json,
+            method: method,
         });
-    }
 
-    private parseParams(params: string | URLSearchParams | { [key: string]: any | any[] }) {
-        if (!params)
-            return params;
-
-        if (typeof(params) === 'string')
-            return params;
-
-        if (params instanceof URLSearchParams)
-            return params;
-
-        const result = new URLSearchParams();
-
-        for (const key of Object.keys(params)) {
-            let val = params[key];
-
-            if (key != null && Array.isArray(key)) {
-                for (const item of val) {
-                    let s = this._getValStr(item);
-                    if (s != null) {
-                        result.append(key, s);
-                    }
-                }
-            } else {
-                let s = this._getValStr(val);
-                if (s != null) {
-                    result.append(key, s);
-                }
+        try {
+            // 执行.
+            let response = await (this._http.request(request).toPromise());
+            let { ok, result } = this._safeParseJsonResult<T>(response);
+            if (!ok) {
+                throw new HttpBadJsonFormatError(request, response);
             }
-        }
+        } 
+        catch (error) {
+            // 状态码错误.
+            if (error instanceof Response) {
+                let response = error;
+                let { ok, result } = this._safeParseJsonResult<T>(response);
+                throw new HttpNotSuccessStatusCodeError(request, response, result);
+            }
 
-        return result;
+            // 网络错误.
+            if (error instanceof ProgressEvent || 
+                (error.target && error.target instanceof XMLHttpRequest)) {
+                let xhq: XMLHttpRequest = error.target;
+                throw new HttpNetworkError(request, xhq);
+            }
+
+            throw error;
+        }
     }
 
-    private _getValStr(val: any) {
-        if (val === null || val === undefined) 
-            return null;
-        
-        if (typeof (val['toISOString']) === 'function') {
-            return val.toISOString();
-        }
-        return val.toString();
-    }
+    
 
-    private createHeaders(options: RequestOptions, headers?: {[name: string]: any;}) {
-        let result = new Headers(headers);
+    
 
-        // 添加身份认证标识.
-        if (options.authorization 
-            && options.authorization.scheme
-            && options.authorization.parameter) {
-            result.set('Authorization', options.authorization.scheme + ' ' + options.authorization.parameter);
+    /**
+     * 将响应内容解析为JSON对象.
+     * 
+     * @param resp 
+     */
+    private _safeParseJsonResult<T>(resp: Response): { ok: boolean, result?: T } {
+        if (resp.status == 204) {
+            return { ok: true };
         }
 
-        return result;
-    }
+        if (typeof (resp.json) !== 'function') {
+            return { ok: false };
+        }
 
-    private parseResp<T>(rsp: Response) {
-        if (rsp.status == 204)
-            return undefined;
-        return rsp.json() as T;
+        try {
+            let result = resp.json() as T;
+            return { ok: true, result: result };
+        } catch (error) {
+            return { ok: false };
+        }
     }
 }
