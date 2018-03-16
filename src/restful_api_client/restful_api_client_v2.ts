@@ -56,7 +56,7 @@ export class RESTfulApiClientV2 {
      * @param method 
      * @param options 
      */
-    private async _exec<T>(url: string, body: any, method: string, options?: RequestOptions) {
+    private async _exec<T>(url: string, body: any, method: string, options?: RequestOptions): Promise<T> {
         options = Object.assign({}, this._globalOptions, options);
 
         let headers = new Headers();
@@ -82,6 +82,7 @@ export class RESTfulApiClientV2 {
             if (!ok) {
                 throw new HttpBadJsonFormatError(request, response);
             }
+            return result;
         } 
         catch (error) {
             // 状态码错误.
@@ -101,10 +102,6 @@ export class RESTfulApiClientV2 {
             throw error;
         }
     }
-
-    
-
-    
 
     /**
      * 将响应内容解析为JSON对象.
