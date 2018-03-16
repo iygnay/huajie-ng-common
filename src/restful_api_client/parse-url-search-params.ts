@@ -45,7 +45,7 @@ function _objectToURLSearchParams(params: { [key: string]: any }) {
             }
         } 
         else {
-            let s = this._getValStr(value);
+            let s = _toString(value);
             result.append(key, s);
         }
     }
