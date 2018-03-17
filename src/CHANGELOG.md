@@ -1,3 +1,20 @@
+# 5.1.0 (2018-03-17)
+
+## 新增功能
+
+1. 添加 `LocalSettingsManagr` 服务
+2. 添加 `CachingManager` 服务
+
+# 5.0.0 (2018-03-17)
+
+## 新增功能
+
+1. 添加 `STARTUP_PARAMS`服务.
+
+## breaking changes
+
+1. 添加 `forRoot` 方法, 原本的`providers`不再直接导出, 而是通过 `forRoot` 方法导出.
+
 # 4.1.3 (2018-03-16)
 
 ## 错误修复
